@@ -1,0 +1,9 @@
+{
+  "Recall@10": 0.0135,
+  "NDCG@10": 0.0092,
+  "HitRate@10": 0.031,
+  "MRR@10": 0.013,
+  "catalog_coverage": 0.0008,
+  "n_users": 11659,
+  "n_candidates": 22753
+}

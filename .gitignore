@@ -1,0 +1,22 @@
+# --- Data: never commit course data (train/validation/test) ---
+MAIN DATA/
+SUPPORTING_DATA/
+data/
+*.zip
+
+# --- Python / Jupyter ---
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+
+# --- Large figures produced locally by the EDA notebook ---
+notebooks/figures/
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
