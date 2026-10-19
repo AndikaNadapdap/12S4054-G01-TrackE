@@ -24,17 +24,31 @@ DATA_DIR/
   SUPPORTING_DATA/  interactions_validation_warm.csv, evaluable_users_validation_warm.csv, ...
 ```
 
-## Run order
+## Setup
 ```
 pip install -r requirements.txt
-python -m tests.test_metrics                      # 1. metric check on a hand-computed example
-python run_popularity.py --data_dir DATA_DIR      # 2. Popularity baseline on warm validation
+python -m tests.test_metrics          # metric check on a hand-computed example
 ```
 
+## Baselines
+| Baseline | Command | Runtime (approx.) |
+|---|---|---|
+| Popularity | `python run_popularity.py --data_dir DATA_DIR` | < 1 min |
+| Matrix Factorization (implicit ALS) | `python run_mf.py --data_dir DATA_DIR` | ~2 min |
+
+`--subset N` evaluates a fixed random sample of N evaluable users (seed 42) for quick sanity
+checks; `--subset 0` evaluates all 11,659 users. `run_mf.py` uses `--subset 1000` by default (W6
+sanity check). Initial MF settings: `--factors 64 --reg 0.1 --alpha 10 --iterations 15 --seed 42`
+(not tuned yet; tuning on validation is planned for W9-W10).
+
+Each run writes `results/<name>_overall.json`, `<name>_by_group.csv`, `<name>_per_user.csv`
+(for paired bootstrap CIs later), and `<name>_top10_examples.md` (readable Top-10 examples).
+
 ## Protocol (warm-start validation)
-- Fit on `interactions_train.csv` only.
+- Fit on `interactions_train.csv` only (MF uses positive interactions, rating >= 4).
 - Candidates: `candidate_items_warm.csv` (22,753 items); training items of each user are excluded.
 - Evaluable users: `evaluable_users_validation_warm.csv` (11,659 users).
 - Relevant item: rating >= 4 in `interactions_validation_warm.csv`.
 - Metrics: Recall@10, NDCG@10, HitRate@10, MRR@10, catalog coverage.
 - Activity groups (provisional, frozen at CP3): low 1-4, medium 5-9, high >=10 training interactions.
+- Every runner asserts: exactly 10 items per list, all items are warm candidates, no training item recommended.
