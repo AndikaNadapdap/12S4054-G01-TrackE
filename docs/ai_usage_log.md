@@ -9,3 +9,4 @@ Small autocomplete does not need to be recorded.
 | W5 | | Claude | Popularity baseline and metric functions | `src/`, `run_popularity.py`, `tests/test_metrics.py` | Hand-computed metric test passes; re-ran on a second laptop with identical results |
 | W5 | | Claude | Draft of title, problem statement, RQs, reference list, Introduction text | Structure and draft text; references | Checked each reference; Introduction to be rewritten in the group's own words |
 | W6 | | Claude | MF (implicit ALS) baseline | `src/mf_als.py`, `run_mf.py` | Re-ran locally; checked Top-10 examples for plausibility; protocol assertions pass |
+| W6 | | Claude | TF-IDF CBF baseline | `src/tfidf_cbf.py`, `run_tfidf.py` | Re-ran locally; checked Top-10 examples for plausibility; protocol assertions pass |

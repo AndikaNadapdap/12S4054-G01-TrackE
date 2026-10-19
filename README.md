@@ -35,11 +35,15 @@ python -m tests.test_metrics          # metric check on a hand-computed example
 |---|---|---|
 | Popularity | `python run_popularity.py --data_dir DATA_DIR` | < 1 min |
 | Matrix Factorization (implicit ALS) | `python run_mf.py --data_dir DATA_DIR` | ~2 min |
+| TF-IDF content-based filtering | `python run_tfidf.py --data_dir DATA_DIR` | < 1 min |
 
 `--subset N` evaluates a fixed random sample of N evaluable users (seed 42) for quick sanity
-checks; `--subset 0` evaluates all 11,659 users. `run_mf.py` uses `--subset 1000` by default (W6
+checks; `--subset 0` evaluates all 11,659 users. `run_mf.py` and `run_tfidf.py` use `--subset 1000` by default (W6
 sanity check). Initial MF settings: `--factors 64 --reg 0.1 --alpha 10 --iterations 15 --seed 42`
 (not tuned yet; tuning on validation is planned for W9-W10).
+Initial TF-IDF settings: text field `content_text_basic`, unigrams, `--min_df 2 --max_df 0.5`,
+sublinear TF, English stop words; user profile = mean of the TF-IDF vectors of the user's
+positive (rating >= 4) training items; score = cosine similarity.
 
 Each run writes `results/<name>_overall.json`, `<name>_by_group.csv`, `<name>_per_user.csv`
 (for paired bootstrap CIs later), and `<name>_top10_examples.md` (readable Top-10 examples).
