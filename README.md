@@ -36,9 +36,10 @@ python -m tests.test_metrics          # metric check on a hand-computed example
 | Popularity | `python run_popularity.py --data_dir DATA_DIR` | < 1 min |
 | Matrix Factorization (implicit ALS) | `python run_mf.py --data_dir DATA_DIR` | ~2 min |
 | TF-IDF content-based filtering | `python run_tfidf.py --data_dir DATA_DIR` | < 1 min |
+| Sentence-embedding CBF (Track E prototype) | `python run_embedding.py --data_dir DATA_DIR` | 5–15 min first run (encoding), then < 1 min |
 
 `--subset N` evaluates a fixed random sample of N evaluable users (seed 42) for quick sanity
-checks; `--subset 0` evaluates all 11,659 users. `run_mf.py` and `run_tfidf.py` use `--subset 1000` by default (W6
+checks; `--subset 0` evaluates all 11,659 users. `run_mf.py`, `run_tfidf.py` and `run_embedding.py` use `--subset 1000` by default (W6
 sanity check). Initial MF settings: `--factors 64 --reg 0.1 --alpha 10 --iterations 15 --seed 42`
 (not tuned yet; tuning on validation is planned for W9-W10).
 Initial TF-IDF settings: text field `content_text_basic`, unigrams, `--min_df 2 --max_df 0.5`,
@@ -56,3 +57,13 @@ Each run writes `results/<name>_overall.json`, `<name>_by_group.csv`, `<name>_pe
 - Metrics: Recall@10, NDCG@10, HitRate@10, MRR@10, catalog coverage.
 - Activity groups (provisional, frozen at CP3): low 1-4, medium 5-9, high >=10 training interactions.
 - Every runner asserts: exactly 10 items per list, all items are warm candidates, no training item recommended.
+
+## Track E: sentence-embedding CBF (prototype)
+`run_embedding.py` keeps **everything identical to TF-IDF CBF except the item representation**:
+same text field (`content_text_basic`), same profile rule (mean of positive training items),
+same cosine scoring, same candidates and users. Default model:
+`sentence-transformers/all-MiniLM-L6-v2` (model's default max length); try another with
+`--model sentence-transformers/all-mpnet-base-v2`. The first run downloads the model and encodes
+all 22,753 items; embeddings are cached in `cache/` (git-ignored). The runner also writes
+`results/<name>_overlap_vs_tfidf.json` with the Jaccard@10 overlap between the TF-IDF and
+embedding Top-10 lists (analysis E3).

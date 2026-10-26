@@ -1,0 +1,5 @@
+{
+  "jaccard@10_mean_vs_tfidf": 0.1594,
+  "share_users_identical_lists": 0.003,
+  "share_users_no_overlap": 0.292
+}

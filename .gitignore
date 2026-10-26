@@ -4,6 +4,9 @@ SUPPORTING_DATA/
 data/
 *.zip
 
+# --- Cached item embeddings (re-created by run_embedding.py) ---
+cache/
+
 # --- Python / Jupyter ---
 __pycache__/
 *.pyc
