@@ -1,0 +1,9 @@
+{
+  "Recall@10": 0.012355481455204306,
+  "NDCG@10": 0.007451795889364138,
+  "experiment_id": "E3-C",
+  "model": "tfidf",
+  "n_users": 11659,
+  "n_candidates": 22753,
+  "runtime_seconds": 24.026
+}

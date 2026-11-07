@@ -1,0 +1,9 @@
+{
+  "Recall@10": 0.007778121775025799,
+  "NDCG@10": 0.004302371844170393,
+  "experiment_id": "E4-A",
+  "model": "embedding",
+  "n_users": 1000,
+  "n_candidates": 22753,
+  "runtime_seconds": 136.589
+}

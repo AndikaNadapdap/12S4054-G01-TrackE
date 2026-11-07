@@ -1,19 +1,32 @@
 """Ranking evaluation metrics for Track E CP3."""
 
 import numpy as np
+import pandas as pd
 
 
 def recall_at_k(recommendations, relevant_items, k=10):
     """Calculate Recall@K for one user."""
+
+    if k <= 0:
+        raise ValueError("k must be greater than zero.")
+
     if not relevant_items:
         return 0.0
 
     recommended = set(recommendations[:k])
-    return len(recommended & set(relevant_items)) / len(relevant_items)
+
+    return (
+        len(recommended & set(relevant_items))
+        / len(relevant_items)
+    )
 
 
 def ndcg_at_k(recommendations, relevant_items, k=10):
     """Calculate binary NDCG@K for one user."""
+
+    if k <= 0:
+        raise ValueError("k must be greater than zero.")
+
     if not relevant_items:
         return 0.0
 
@@ -41,12 +54,18 @@ def evaluate(recommendations, relevant, k=10):
 
     Returns a pandas DataFrame indexed by user_id.
     """
-    import pandas as pd
+
+    missing_users = set(relevant) - set(recommendations)
+
+    if missing_users:
+        raise ValueError(
+            f"Missing recommendations for {len(missing_users)} users."
+        )
 
     rows = []
 
     for user_id, relevant_items in relevant.items():
-        recs = recommendations.get(user_id, [])
+        recs = recommendations[user_id]
 
         rows.append({
             "user_id": user_id,
@@ -59,4 +78,5 @@ def evaluate(recommendations, relevant, k=10):
 
 def summarize_metrics(per_user):
     """Calculate mean ranking metrics across users."""
+
     return per_user.mean().to_dict()

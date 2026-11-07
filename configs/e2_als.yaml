@@ -1,0 +1,21 @@
+experiment:
+  id: E2
+  name: als
+  model: als
+
+evaluation:
+  k: 10
+  subset: 1000
+  seed: 42
+
+data:
+  directory: "."
+
+model:
+  factors: 64
+  reg: 0.1
+  alpha: 10.0
+  iterations: 15
+
+output:
+  directory: results

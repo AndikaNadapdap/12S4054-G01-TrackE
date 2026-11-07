@@ -1,0 +1,21 @@
+experiment:
+  id: E4-A
+  name: embedding_128
+  model: embedding
+
+evaluation:
+  k: 10
+  subset: 1000
+  seed: 42
+
+data:
+  directory: "."
+
+model:
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+  batch_size: 64
+  max_seq_length: 128
+  device: cpu
+
+output:
+  directory: results

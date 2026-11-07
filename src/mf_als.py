@@ -2,80 +2,186 @@
 
 Training signal: positive training interactions only (rating >= 4), treated as
 binary preference p_ui = 1 with confidence c_ui = 1 + alpha. All other pairs have
-p_ui = 0 and confidence 1. Alternating closed-form updates:
+p_ui = 0 and confidence 1.
 
-    x_u = (Y^T Y + alpha * Y_u^T Y_u + reg * I)^-1  (1 + alpha) * Y_u^T 1
-    y_i = (X^T X + alpha * X_i^T X_i + reg * I)^-1  (1 + alpha) * X_i^T 1
-
-Written in plain NumPy/SciPy so that results are deterministic for a fixed seed.
+Written in NumPy/SciPy with deterministic initialization for a fixed seed.
 """
+
 import numpy as np
 import scipy.sparse as sp
+
 from .common import RELEVANCE_THRESHOLD
 
 
 class ALSRecommender:
-    def __init__(self, factors=64, reg=0.1, alpha=10.0, iterations=15, seed=42, verbose=True):
-        self.factors, self.reg, self.alpha = factors, reg, alpha
-        self.iterations, self.seed, self.verbose = iterations, seed, verbose
+    def __init__(
+        self,
+        factors=64,
+        reg=0.1,
+        alpha=10.0,
+        iterations=15,
+        seed=42,
+        verbose=True,
+    ):
+        self.factors = factors
+        self.reg = reg
+        self.alpha = alpha
+        self.iterations = iterations
+        self.seed = seed
+        self.verbose = verbose
 
-    # ---------------------------------------------------------------- fit
     def fit(self, train, candidates):
-        self.items = list(candidates)
-        self.item_index = {it: j for j, it in enumerate(self.items)}
-        pos = train[(train.rating >= RELEVANCE_THRESHOLD) & train.item_id.isin(self.item_index)]
-        self.users = sorted(train.user_id.unique())
-        self.user_index = {u: k for k, u in enumerate(self.users)}
+        """Train implicit-feedback ALS using positive training interactions."""
 
-        rows = pos.user_id.map(self.user_index).values
-        cols = pos.item_id.map(self.item_index).values
-        R = sp.csr_matrix((np.ones(len(rows)), (rows, cols)),
-                          shape=(len(self.users), len(self.items)))
-        R.data[:] = 1.0                                    # binary preference
-        Rt = R.T.tocsr()
+        self.items = list(candidates)
+        self.item_index = {
+            item: index
+            for index, item in enumerate(self.items)
+        }
+
+        positive = train[
+            (train.rating >= RELEVANCE_THRESHOLD)
+            & train.item_id.isin(self.item_index)
+        ]
+
+        self.users = sorted(train.user_id.unique())
+        self.user_index = {
+            user: index
+            for index, user in enumerate(self.users)
+        }
+
+        rows = positive.user_id.map(self.user_index).values
+        cols = positive.item_id.map(self.item_index).values
+
+        interaction_matrix = sp.csr_matrix(
+            (
+                np.ones(len(rows)),
+                (rows, cols),
+            ),
+            shape=(len(self.users), len(self.items)),
+        )
+
+        interaction_matrix.data[:] = 1.0
+        interaction_matrix_t = interaction_matrix.T.tocsr()
 
         rng = np.random.default_rng(self.seed)
-        X = rng.normal(0, 0.01, (R.shape[0], self.factors))
-        Y = rng.normal(0, 0.01, (R.shape[1], self.factors))
-        for it in range(self.iterations):
-            X = self._solve(R, Y)
-            Y = self._solve(Rt, X)
+
+        user_factors = rng.normal(
+            0,
+            0.01,
+            (interaction_matrix.shape[0], self.factors),
+        )
+
+        item_factors = rng.normal(
+            0,
+            0.01,
+            (interaction_matrix.shape[1], self.factors),
+        )
+
+        for iteration in range(self.iterations):
+            user_factors = self._solve(
+                interaction_matrix,
+                item_factors,
+            )
+
+            item_factors = self._solve(
+                interaction_matrix_t,
+                user_factors,
+            )
+
             if self.verbose:
-                print(f"  ALS iteration {it + 1}/{self.iterations} done")
-        self.X, self.Y = X, Y
+                print(
+                    f"ALS iteration {iteration + 1}/"
+                    f"{self.iterations} completed"
+                )
+
+        self.X = user_factors
+        self.Y = item_factors
+
         return self
 
-    def _solve(self, M, F):
-        """Update every row of M's side given the fixed factor matrix F."""
-        k = F.shape[1]
-        FtF = F.T @ F
-        reg_I = self.reg * np.eye(k)
-        out = np.zeros((M.shape[0], k))
-        for r in range(M.shape[0]):
-            idx = M.indices[M.indptr[r]:M.indptr[r + 1]]
-            if len(idx) == 0:
-                continue                                    # no positives -> zero vector
-            Fr = F[idx]
-            A = FtF + self.alpha * (Fr.T @ Fr) + reg_I
-            b = (1.0 + self.alpha) * Fr.sum(axis=0)
-            out[r] = np.linalg.solve(A, b)
-        return out
+    def _solve(self, matrix, fixed_factors):
+        """Update factor vectors while keeping the other side fixed."""
 
-    # ---------------------------------------------------------- recommend
+        k = fixed_factors.shape[1]
+
+        factor_product = fixed_factors.T @ fixed_factors
+        regularization = self.reg * np.eye(k)
+
+        output = np.zeros((matrix.shape[0], k))
+
+        for row in range(matrix.shape[0]):
+            indices = matrix.indices[
+                matrix.indptr[row]:matrix.indptr[row + 1]
+            ]
+
+            if len(indices) == 0:
+                continue
+
+            row_factors = fixed_factors[indices]
+
+            A = (
+                factor_product
+                + self.alpha * (row_factors.T @ row_factors)
+                + regularization
+            )
+
+            b = (1.0 + self.alpha) * row_factors.sum(axis=0)
+
+            output[row] = np.linalg.solve(A, b)
+
+        return output
+
     def recommend_many(self, users, seen, k=10, batch=2048):
-        """Top-k item_ids for each user, excluding items seen in training."""
-        recs = {}
+        """Generate Top-K recommendations while excluding seen items."""
+
+        if k <= 0:
+            raise ValueError("k must be greater than zero.")
+
+        if len(self.items) < k:
+            raise ValueError(
+                f"Number of candidate items ({len(self.items)}) "
+                f"is smaller than k ({k})."
+            )
+
+        recommendations = {}
+
         for start in range(0, len(users), batch):
             chunk = users[start:start + batch]
-            U = np.vstack([self.X[self.user_index[u]] for u in chunk])
-            S = U @ self.Y.T
-            for row, u in enumerate(chunk):
-                for it in seen.get(u, ()):
-                    j = self.item_index.get(it)
-                    if j is not None:
-                        S[row, j] = -np.inf
-            top = np.argpartition(-S, k, axis=1)[:, :k]
-            for row, u in enumerate(chunk):
-                order = top[row][np.argsort(-S[row, top[row]], kind="stable")]
-                recs[u] = [self.items[j] for j in order]
-        return recs
+
+            user_vectors = np.vstack([
+                self.X[self.user_index[user]]
+                if user in self.user_index
+                else np.zeros(self.factors)
+                for user in chunk
+            ])
+
+            scores = user_vectors @ self.Y.T
+
+            for row, user in enumerate(chunk):
+                for item in seen.get(user, ()):
+                    item_index = self.item_index.get(item)
+
+                    if item_index is not None:
+                        scores[row, item_index] = -np.inf
+
+            top_indices = np.argpartition(
+                -scores,
+                kth=k - 1,
+                axis=1,
+            )[:, :k]
+
+            for row, user in enumerate(chunk):
+                ordered_indices = top_indices[row][
+                    np.argsort(
+                        -scores[row, top_indices[row]],
+                        kind="stable",
+                    )
+                ]
+
+                recommendations[user] = [
+                    self.items[index]
+                    for index in ordered_indices
+                ]
+
+        return recommendations

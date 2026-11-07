@@ -1,0 +1,15 @@
+experiment:
+  id: E1
+  name: popularity
+  model: popularity
+
+evaluation:
+  k: 10
+  subset: 1000
+  seed: 42
+
+data:
+  directory: "."
+
+output:
+  directory: results

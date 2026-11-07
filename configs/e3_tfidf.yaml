@@ -1,0 +1,23 @@
+experiment:
+  id: E3
+  name: tfidf
+  model: tfidf
+
+evaluation:
+  k: 10
+  subset: 1000
+  seed: 42
+
+data:
+  directory: "."
+
+model:
+  ngram_range: [1, 1]
+  min_df: 2
+  max_df: 0.5
+  max_features: null
+  sublinear_tf: true
+  stop_words: english
+
+output:
+  directory: results

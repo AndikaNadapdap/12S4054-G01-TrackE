@@ -10,6 +10,7 @@ cache/
 
 # --- Python / Jupyter ---
 __pycache__/
+*.py[cod]
 *.pyc
 .ipynb_checkpoints/
 .venv/
@@ -25,3 +26,7 @@ notebooks/figures/
 Thumbs.db
 .vscode/
 .idea/
+
+# Per-user evaluation outputs
+results/*_per_user.csv
+results/*_subset100_*
