@@ -6,6 +6,7 @@ data/
 
 # --- Cached item embeddings (re-created by run_embedding.py) ---
 cache/
+*.npy
 
 # --- Python / Jupyter ---
 __pycache__/
@@ -14,6 +15,7 @@ __pycache__/
 .venv/
 venv/
 .env
+.env.*
 
 # --- Large figures produced locally by the EDA notebook ---
 notebooks/figures/
