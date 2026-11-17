@@ -11,7 +11,9 @@ src/          shared evaluation code and models
 tests/        hand-checkable metric tests
 notebooks/    EDA (training data only)
 results/      saved metrics and Top-10 examples (no raw data)
-docs/         AI usage log
+docs/         CP3 design decisions and search space
+configs/      one YAML file per experiment (E1–E4)
+scripts/      CP3 batch runner and model-selection script
 run_*.py      one runner per baseline
 ```
 
@@ -67,3 +69,16 @@ same cosine scoring, same candidates and users. Default model:
 all 22,753 items; embeddings are cached in `cache/` (git-ignored). The runner also writes
 `results/<name>_overlap_vs_tfidf.json` with the Jaccard@10 overlap between the TF-IDF and
 embedding Top-10 lists (analysis E3).
+
+## CP3: validation runs and model selection
+All experiment settings are fixed in `configs/` (see `docs/search_space.md`). Every config
+evaluates **all 11,659 evaluable users** (`subset: 0`). Commit your code first, then run:
+```
+bash scripts/run_cp3_validation.sh "/path/to/data"                                  # macOS / Linux
+powershell -ExecutionPolicy Bypass -File scripts\run_cp3_validation.ps1 -DataDir "D:\sisrek_data"   # Windows
+```
+Each run appends to `results/runs.jsonl` (config hash, Git commit, `git_dirty`, metrics, seed).
+`scripts/select_best.py` applies the selection rule (highest NDCG@10, Recall@10 tie-break, only
+committed runs on all users) and writes `results/cp3_selection.json`.
+Exact library versions used for the reported runs are in `requirements-lock.txt`.
+Early 1,000-user runs are kept in `results/archive/` for reference only.

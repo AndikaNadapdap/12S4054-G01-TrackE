@@ -56,6 +56,26 @@ def get_git_commit():
         return None
 
 
+def get_git_dirty():
+    """True if there are uncommitted changes to tracked code files.
+
+    Results are only traceable to `git_commit` when this is False, so every
+    reported run should be executed from committed code.
+    """
+
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no", "--", "src", "configs"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return bool(result.stdout.strip())
+
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
 def create_model(model_name, config, data):
     """Initialize and fit the selected recommendation model."""
 
@@ -339,6 +359,7 @@ def run_experiment(config_path, subset_override=None):
         "model": model_name,
         "config_hash": config_hash,
         "git_commit": get_git_commit(),
+        "git_dirty": get_git_dirty(),
         "n_evaluable_users": len(users),
         "recall@10": overall.get("Recall@10"),
         "ndcg@10": overall.get("NDCG@10"),
@@ -361,6 +382,10 @@ def run_experiment(config_path, subset_override=None):
 
     print("\nResults by activity group:")
     print(by_group)
+
+    if log_entry["git_dirty"]:
+        print("\nWARNING: src/ or configs/ has uncommitted changes; "
+              "commit first so this run is traceable to git_commit.")
 
     print(f"\nRuntime: {runtime:.2f} seconds")
     print(f"Saved log: {log_path}")

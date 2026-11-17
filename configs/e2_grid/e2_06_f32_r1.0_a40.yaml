@@ -1,0 +1,21 @@
+experiment:
+  id: E2-06
+  name: als_f32_r1.0_a40
+  model: als
+
+evaluation:
+  k: 10
+  subset: 0
+  seed: 42
+
+data:
+  directory: "."
+
+model:
+  factors: 32
+  reg: 1.0
+  alpha: 40.0
+  iterations: 15
+
+output:
+  directory: results
