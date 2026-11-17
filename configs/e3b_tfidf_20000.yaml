@@ -5,7 +5,7 @@ experiment:
 
 evaluation:
   k: 10
-  subset: 1000
+  subset: 0
   seed: 42
 
 data:
