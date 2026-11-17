@@ -1,0 +1,21 @@
+experiment:
+  id: E2-13
+  name: als_f128_r0.01_a10
+  model: als
+
+evaluation:
+  k: 10
+  subset: 0
+  seed: 42
+
+data:
+  directory: "."
+
+model:
+  factors: 128
+  reg: 0.01
+  alpha: 10.0
+  iterations: 15
+
+output:
+  directory: results
