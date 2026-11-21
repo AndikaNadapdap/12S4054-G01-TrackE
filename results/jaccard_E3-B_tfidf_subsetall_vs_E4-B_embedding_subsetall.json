@@ -1,0 +1,8 @@
+{
+  "run_a": "E3-B_tfidf_subsetall",
+  "run_b": "E4-B_embedding_subsetall",
+  "n_users": 11659,
+  "jaccard@10_mean": 0.1514,
+  "share_users_identical_lists": 0.0014,
+  "share_users_no_overlap": 0.2882
+}

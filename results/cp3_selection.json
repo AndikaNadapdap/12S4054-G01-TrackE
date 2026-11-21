@@ -4,26 +4,26 @@
     "run_id": "E2-07_als_subsetall",
     "ndcg@10": 0.012448188236072454,
     "recall@10": 0.020019006345013943,
-    "git_commit": "322d6be5567718e2273a8a1e882511e742297175",
+    "git_commit": "2b36c5050dfafd89d946f351f20bcc7177360b25",
     "config_hash": "cce38686370c8b76d95bea752ef6780f88c83a98bbf2c7397b52661ed35144ca",
     "n_configs_compared": 18
   },
   "TF-IDF": {
-    "experiment_id": "E3-C",
-    "run_id": "E3-C_tfidf_subsetall",
-    "ndcg@10": 0.007411741739760435,
-    "recall@10": 0.012329524548184203,
-    "git_commit": "5debc88d436732a3b230c4f8106a1f0ff85cbf7a",
-    "config_hash": "1146d5756b6ad756328a5a1b3c452c9dc79d7a48a1debafd7336e2f282b735d1",
-    "n_configs_compared": 1
+    "experiment_id": "E3-B",
+    "run_id": "E3-B_tfidf_subsetall",
+    "ndcg@10": 0.007539436374981775,
+    "recall@10": 0.012748060364001437,
+    "git_commit": "2b36c5050dfafd89d946f351f20bcc7177360b25",
+    "config_hash": "f62cb1cbfb7bcd320857f7f8a775fba985d1070790bb0abd7786a5984865daba",
+    "n_configs_compared": 3
   },
   "Embedding": {
     "experiment_id": "E4-B",
     "run_id": "E4-B_embedding_subsetall",
     "ndcg@10": 0.0052280588183426764,
     "recall@10": 0.008685965113718478,
-    "git_commit": "5debc88d436732a3b230c4f8106a1f0ff85cbf7a",
+    "git_commit": "2b36c5050dfafd89d946f351f20bcc7177360b25",
     "config_hash": "3d543db4450be86946a16958597ec6d4ceac2a0d385d8c2c3626753cc47e84bd",
-    "n_configs_compared": 1
+    "n_configs_compared": 3
   }
 }
