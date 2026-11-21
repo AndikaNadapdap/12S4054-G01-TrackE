@@ -100,22 +100,7 @@ def main():
         allrows.append([e, r["model"], o["Recall@10"], o["NDCG@10"], o.get("HitRate@10", ""), o.get("MRR@10", "")])
     write_csv("all_configs_k10", ["Config", "Model", "Recall@10", "NDCG@10", "HitRate@10", "MRR@10"], allrows)
 
-    # ---- Figure 1: model comparison at K = 10 ----
-    fig, axes = plt.subplots(1, 2, figsize=(9, 3.6))
-    for ax, (idx, name) in zip(axes, [(3, "NDCG@10"), (2, "Recall@10")]):
-        vals = [r[idx] for r in rows]
-        bars = ax.bar([r[0] for r in rows], vals, color=[COLOR[r[0]] for r in rows])
-        for b, v in zip(bars, vals):
-            ax.text(b.get_x() + b.get_width() / 2, v, f"{v:.4f}", ha="center", va="bottom", fontsize=8)
-        ax.set_title(name)
-        ax.set_ylim(0, max(vals) * 1.18)
-        ax.tick_params(axis="x", rotation=20)
-    fig.suptitle(f"Validation, all {n_users:,} evaluable users, K = 10", fontsize=10)
-    fig.tight_layout()
-    fig.savefig(FIG / "fig1_model_comparison.png", dpi=200)
-    plt.close(fig)
-
-    # ---- Figure 2: effect of K (needs results/k_sweep) ----
+    # ---- Figure 1: grouped bars of NDCG@K and Recall@K per model (K = 10, 20, 50) ----
     ks = {}
     sweep = RES / "k_sweep"
     for e in SELECTED:
@@ -124,7 +109,27 @@ def main():
             hits = sorted(sweep.glob(f"{e}-K{k}_*_overall.json"))
             if hits:
                 ks[e][k] = read_json(hits[-1])
-    if all(len(v) == 3 for v in ks.values()):
+    have_k = all(len(v) == 3 for v in ks.values())
+    if have_k:
+        fig, axes = plt.subplots(1, 2, figsize=(9.5, 3.8))
+        w = 0.2
+        for ax, metric in zip(axes, ["NDCG", "Recall"]):
+            for i, e in enumerate(SELECTED):
+                xs = [j + (i - 1.5) * w for j in range(3)]
+                vals = [ks[e][k][f"{metric}@{k}"] for k in (10, 20, 50)]
+                ax.bar(xs, vals, w, color=COLOR[LABEL[e]], label=LABEL[e])
+            ax.set_xticks(range(3))
+            ax.set_xticklabels(["K = 10", "K = 20", "K = 50"])
+            ax.set_ylabel(f"{metric}@K")
+            ax.set_title(f"{metric}@K by model")
+        axes[0].legend(frameon=False, fontsize=8, title="Model", title_fontsize=8)
+        fig.suptitle(f"Validation, all {n_users:,} evaluable users", fontsize=10)
+        fig.tight_layout()
+        fig.savefig(FIG / "fig1_model_comparison.png", dpi=200)
+        plt.close(fig)
+
+    # ---- Figure 2: effect of K (needs results/k_sweep) ----
+    if have_k:
         krows = []
         fig, axes = plt.subplots(1, 2, figsize=(9, 3.6))
         for ax, metric in zip(axes, ["NDCG", "Recall"]):
@@ -133,8 +138,10 @@ def main():
                         marker="o", color=COLOR[LABEL[e]], label=LABEL[e])
             ax.set_xticks([10, 20, 50])
             ax.set_xlabel("K")
-            ax.set_title(f"{metric}@K")
-        axes[0].legend(frameon=False, fontsize=8)
+            ax.set_ylabel(f"{metric}@K")
+            ax.set_title(f"{metric}@K vs K")
+        axes[0].legend(frameon=False, fontsize=8, title="Model", title_fontsize=8, loc="lower right")
+        fig.suptitle("Effect of K on the selected models (validation)", fontsize=10)
         fig.tight_layout()
         fig.savefig(FIG / "fig2_effect_of_k.png", dpi=200)
         plt.close(fig)
@@ -144,6 +151,27 @@ def main():
         write_csv("effect_of_k", kh, krows)
         write_tex("effect_of_k", kh, krows,
                   "Effect of K on the selected models (all evaluable users, validation).", "tab:effect-k")
+        # Embedding (track model) versus each baseline: absolute and relative differences
+        cmp_rows = []
+        for base in ("E1", "E2-07", "E3-B"):
+            for k in (10, 20, 50):
+                row = [f"Embedding vs {LABEL[base]}", k]
+                for m in ("NDCG", "Recall"):
+                    a_, b_ = ks["E4-B"][k][f"{m}@{k}"], ks[base][k][f"{m}@{k}"]
+                    row += [a_ - b_, (a_ / b_ - 1) * 100]
+                cmp_rows.append(row)
+        write_csv("baseline_vs_track", ["Comparison (track minus baseline)", "K", "dNDCG", "dNDCG_%", "dRecall", "dRecall_%"], cmp_rows)
+        # Main table: model x metric for K = 10/20/50 incl. Precision@K when available
+        prec_path = TAB / "precision_at_k.csv"
+        prec = {r["Model"]: r for r in csv.DictReader(open(prec_path))} if prec_path.exists() else {}
+        main_rows = []
+        for e in SELECTED:
+            row = [LABEL[e]] + [ks[e][k][f"NDCG@{k}"] for k in (10, 20, 50)] + [ks[e][k][f"Recall@{k}"] for k in (10, 20, 50)]
+            if prec:
+                row += [float(prec[LABEL[e]][f"Precision@{k}"]) for k in (10, 20, 50)]
+            main_rows.append(row)
+        mh = ["Model", "NDCG@10", "NDCG@20", "NDCG@50", "Recall@10", "Recall@20", "Recall@50"] + (["Precision@10", "Precision@20", "Precision@50"] if prec else [])
+        write_csv("main_results_all_k", mh, main_rows)
     else:
         print("K sweep incomplete: skipping fig2_effect_of_k.png (run scripts/run_k_sweep.sh)")
 
@@ -159,7 +187,8 @@ def main():
     ax.set_xticklabels(["low (1-4)", "medium (5-9)", "high (>=10)"])
     ax.set_xlabel("training interactions per user")
     ax.set_ylabel("NDCG@10")
-    ax.legend(frameon=False, fontsize=8)
+    ax.set_title("NDCG@10 by user activity group (validation)", fontsize=10)
+    ax.legend(frameon=False, fontsize=8, title="Model", title_fontsize=8)
     fig.tight_layout()
     fig.savefig(FIG / "fig3_activity_groups.png", dpi=200)
     plt.close(fig)

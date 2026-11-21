@@ -40,7 +40,7 @@ with a paired bootstrap over users (1{,}000 resamples, seed 42, 95\% CI).
 \subsection{Comparison with the baselines}
 Table~\ref{tab:main} and Figure~\ref{fig:models} compare the selected configurations at $K=10$.
 ALS is the strongest model, followed by Popularity, TF-IDF and the embedding model. The order is
-the same for NDCG, Recall, HitRate and MRR, and for $K=10, 20, 50$ (Table~\ref{tab:k},
+the same for NDCG, Recall, HitRate and MRR, and for $K=10, 20, 50$ (Tables~\ref{tab:k} and~\ref{tab:track},
 Figure~\ref{fig:k}). ALS improves NDCG@10 over Popularity by 35\% and Recall@10 by 48\%;
 TF-IDF is 18\% (NDCG) and 6\% (Recall) below Popularity, and the embedding model is a further
 31\% (NDCG) and 32\% (Recall) below TF-IDF. All models are 20--46 times better than random
@@ -70,18 +70,39 @@ Embedding & E4-B & 0.0087 & 0.0052 & 0.0149 & 0.0058 & 0.6221 \\
 \label{fig:models}
 \end{figure}
 
-\begin{table}[t]
-\caption{Effect of $K$ on the selected models (R = Recall, N = NDCG).}
+\begin{table*}[t]
+\caption{Main results on all 11{,}659 validation users for $K\in\{10,20,50\}$ (N = NDCG, R = Recall, P = Precision; Precision@K is derived from per-user Recall@K and the number of relevant items).}
 \label{tab:k}
 \small
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccccc}
 \toprule
-Model & R@10 & N@10 & R@20 & N@20 & R@50 & N@50 \\
+Model & N@10 & N@20 & N@50 & R@10 & R@20 & R@50 & P@10 & P@20 & P@50 \\
 \midrule
-Popularity & 0.0135 & 0.0092 & 0.0215 & 0.0115 & 0.0420 & 0.0162 \\
-ALS & 0.0200 & 0.0124 & 0.0299 & 0.0154 & 0.0524 & 0.0206 \\
-TF-IDF & 0.0127 & 0.0075 & 0.0195 & 0.0095 & 0.0348 & 0.0131 \\
-Embedding & 0.0087 & 0.0052 & 0.0137 & 0.0067 & 0.0252 & 0.0093 \\
+Popularity & 0.0092 & 0.0115 & 0.0162 & 0.0135 & 0.0215 & 0.0420 & 0.0032 & 0.0024 & 0.0018 \\
+ALS & 0.0124 & 0.0154 & 0.0206 & 0.0200 & 0.0299 & 0.0524 & 0.0041 & 0.0031 & 0.0022 \\
+TF-IDF & 0.0075 & 0.0095 & 0.0131 & 0.0127 & 0.0195 & 0.0348 & 0.0022 & 0.0018 & 0.0013 \\
+Embedding & 0.0052 & 0.0067 & 0.0093 & 0.0087 & 0.0137 & 0.0252 & 0.0016 & 0.0013 & 0.0009 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]
+\caption{Embedding model (track) versus each baseline: absolute difference and relative change in NDCG@K and Recall@K.}
+\label{tab:track}
+\small
+\begin{tabular}{lcll}
+\toprule
+Comparison & $K$ & $\Delta$NDCG@K & $\Delta$Recall@K \\
+\midrule
+Embedding $-$ Popularity & 10 & $-$0.0040 ($-$43.3\%) & $-$0.0048 ($-$35.7\%) \\
+Embedding $-$ Popularity & 20 & $-$0.0048 ($-$41.6\%) & $-$0.0078 ($-$36.4\%) \\
+Embedding $-$ Popularity & 50 & $-$0.0069 ($-$42.7\%) & $-$0.0168 ($-$40.0\%) \\
+Embedding $-$ ALS & 10 & $-$0.0072 ($-$58.0\%) & $-$0.0113 ($-$56.6\%) \\
+Embedding $-$ ALS & 20 & $-$0.0087 ($-$56.4\%) & $-$0.0162 ($-$54.3\%) \\
+Embedding $-$ ALS & 50 & $-$0.0113 ($-$54.9\%) & $-$0.0272 ($-$51.9\%) \\
+Embedding $-$ TF-IDF & 10 & $-$0.0023 ($-$30.7\%) & $-$0.0041 ($-$31.9\%) \\
+Embedding $-$ TF-IDF & 20 & $-$0.0028 ($-$29.4\%) & $-$0.0058 ($-$29.7\%) \\
+Embedding $-$ TF-IDF & 50 & $-$0.0038 ($-$28.7\%) & $-$0.0096 ($-$27.6\%) \\
 \bottomrule
 \end{tabular}
 \end{table}
