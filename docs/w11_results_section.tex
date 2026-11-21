@@ -1,0 +1,227 @@
+% ============================================================================
+% W11 - Bagian "Hasil Eksperimen (Validation)" untuk Overleaf (Bahasa Indonesia)
+% Tempel ke berkas Results. Unggah folder results/figures/ ke Overleaf sebagai
+% figures/ dan pastikan \usepackage{graphicx,booktabs} ada di preamble.
+% Semua angka diambil dari results/ (lihat results/tables/*.csv).
+%
+% PERIKSA SEBELUM DIKUMPULKAN:
+%  1. Teks RQ1 dan RQ2 di bawah DISIMPULKAN dari judul proyek dan
+%     docs/design_decisions.md. Ganti dengan RQ/hipotesis resmi kelompok.
+%  2. Sesuaikan nama label/bagian dengan struktur paper (Method dari CP3).
+% ============================================================================
+
+\section{Hasil Eksperimen pada Validation}
+\label{sec:results}
+
+\subsection{Pengaturan dan Pemilihan Model}
+Seluruh eksperimen memakai protokol warm-start yang ditetapkan pada CP3: model
+dilatih hanya pada \texttt{interactions\_train.csv}, dievaluasi pada data
+validasi \textit{warm-start} untuk 11.659 pengguna yang dapat dievaluasi, dengan
+ranking penuh atas 22.753 item kandidat dan item yang sudah muncul pada data
+latih setiap pengguna dikeluarkan. Item relevan adalah item dengan rating
+$\geq 4$. Metrik utama adalah NDCG@10 dengan Recall@10 sebagai \textit{tie-breaker};
+HitRate@10, MRR@10, dan Coverage@10 dilaporkan sebagai metrik tambahan. Seed
+yang digunakan adalah 42 dan set uji (\textit{test set}) tidak digunakan.
+
+Ruang pencarian mengikuti CP3: ALS 18 konfigurasi (faktor $\{32, 64, 128\}$,
+regularisasi $\{0{,}01; 0{,}1; 1\}$, alpha $\{10, 40\}$), TF-IDF 3 konfigurasi
+(E3-A/B/C), dan \textit{sentence embedding} 3 konfigurasi (E4-A/B/C), sehingga
+anggaran tuning TF-IDF dan embedding setara. Konfigurasi terbaik dipilih otomatis
+dari NDCG@10 tertinggi pada seluruh pengguna validasi dan hanya dari
+penjalanan dengan kode yang sudah di-commit.
+
+\begin{table}[t]
+\centering
+\caption{Konfigurasi terpilih untuk setiap model.}
+\label{tab:selected}
+\begin{tabular}{lll}
+\hline
+Model & ID & Konfigurasi \\
+\hline
+Popularity & E1 & jumlah interaksi positif global \\
+ALS & E2-07 & 64 faktor, reg 0,01, alpha 10, 15 iterasi \\
+TF-IDF & E3-B & unigram, 20.000 fitur, \texttt{min\_df}=2, \texttt{max\_df}=0,5 \\
+Embedding & E4-B & \texttt{all-MiniLM-L6-v2}, panjang maksimum 256 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Perbandingan dengan Baseline}
+Tabel~\ref{tab:main} dan Gambar~\ref{fig:model} membandingkan keempat model pada K=10.
+ALS menjadi model terkuat (Recall@10 0,0200; NDCG@10 0,0124), unggul 48\% pada
+Recall@10 dan 35\% pada NDCG@10 atas Popularity. Popularity justru mengungguli
+kedua model berbasis konten: TF-IDF lebih rendah 6\% pada Recall@10 dan 18\% pada
+NDCG@10, dan embedding menjadi yang terlemah, 32\% (Recall@10) dan 31\% (NDCG@10)
+di bawah TF-IDF.
+
+\begin{table}[t]
+\centering
+\caption{Hasil validation pada K=10, seluruh 11.659 pengguna (konfigurasi terpilih).}
+\label{tab:main}
+\begin{tabular}{llrrrrr}
+\hline
+Model & ID & Recall@10 & NDCG@10 & HitRate@10 & MRR@10 & Coverage@10 \\
+\hline
+Popularity & E1    & 0,0135 & 0,0092 & 0,0310 & 0,0130 & 0,0008 \\
+ALS        & E2-07 & 0,0200 & 0,0124 & 0,0396 & 0,0153 & 0,0421 \\
+TF-IDF     & E3-B  & 0,0127 & 0,0075 & 0,0214 & 0,0082 & 0,7122 \\
+Embedding  & E4-B  & 0,0087 & 0,0052 & 0,0149 & 0,0058 & 0,6221 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig1_model_comparison.png}
+\caption{NDCG@10 dan Recall@10 keempat model pada validation (11.659 pengguna).}
+\label{fig:model}
+\end{figure}
+
+\paragraph{Pengaruh nilai K.}
+Tabel~\ref{tab:k} dan Gambar~\ref{fig:k} menunjukkan bahwa urutan model sama pada
+K = 10, 20, dan 50: ALS, Popularity, TF-IDF, lalu embedding. Selisih antara
+Popularity dan TF-IDF pada Recall melebar seiring K (6\% pada K=10, 9\% pada K=20,
+17\% pada K=50), sehingga tidak ada nilai K yang membalik kesimpulan.
+
+\begin{table}[t]
+\centering
+\caption{Pengaruh K pada model terpilih (seluruh pengguna, validation).}
+\label{tab:k}
+\begin{tabular}{lrrrrrr}
+\hline
+Model & R@10 & N@10 & R@20 & N@20 & R@50 & N@50 \\
+\hline
+Popularity & 0,0135 & 0,0092 & 0,0215 & 0,0115 & 0,0420 & 0,0162 \\
+ALS        & 0,0200 & 0,0124 & 0,0299 & 0,0154 & 0,0524 & 0,0206 \\
+TF-IDF     & 0,0127 & 0,0075 & 0,0195 & 0,0095 & 0,0348 & 0,0131 \\
+Embedding  & 0,0087 & 0,0052 & 0,0137 & 0,0067 & 0,0252 & 0,0093 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig2_effect_of_k.png}
+\caption{Pengaruh K (10, 20, 50) terhadap NDCG@K dan Recall@K.}
+\label{fig:k}
+\end{figure}
+
+\subsection{Hasil Pencarian Hyperparameter}
+Gambar~\ref{fig:grid} menunjukkan NDCG@10 untuk 18 konfigurasi ALS. Seluruh
+konfigurasi berada pada rentang sempit (0,0116--0,0124), dengan 64 faktor dan
+alpha 10 terbaik; konfigurasi terpilih (E2-07) hanya 0,2\% lebih tinggi daripada
+konfigurasi awal CP2 (0,01242). Pemenang berada di tepi grid untuk regularisasi
+(0,01 adalah nilai terkecil yang dicoba), sehingga nilai yang lebih kecil belum
+diuji. Pada Gambar~\ref{fig:lexsem}, seluruh konfigurasi embedding (NDCG@10
+0,0047--0,0052) berada di bawah seluruh konfigurasi TF-IDF (0,0071--0,0075),
+sehingga kesimpulan perbandingan leksikal dan semantik tidak bergantung pada
+pilihan hyperparameter dalam ruang pencarian ini. Panjang input embedding tidak
+monoton: 256 terbaik, diikuti 512 (0,0050) dan 128 (0,0047).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/fig4_als_grid.png}
+\caption{NDCG@10 untuk 18 konfigurasi ALS pada validation.}
+\label{fig:grid}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/fig5_lexical_vs_semantic.png}
+\caption{NDCG@10 seluruh konfigurasi TF-IDF (E3) dan embedding (E4).}
+\label{fig:lexsem}
+\end{figure}
+
+\subsection{Analisis menurut Keaktifan Pengguna}
+Tabel~\ref{tab:group} dan Gambar~\ref{fig:group} memecah NDCG@10 menurut jumlah
+interaksi latih (rendah 1--4: 4.772 pengguna; sedang 5--9: 4.142; tinggi
+$\geq$10: 2.745). Pada pengguna dengan riwayat sedikit, ALS hampir sama dengan
+Popularity (0,0114 dibanding 0,0111); keunggulan ALS membesar pada pengguna
+sedang dan tinggi (0,0148 pada kelompok tinggi), sedangkan Popularity menurun
+seiring keaktifan. TF-IDF paling baik pada kelompok sedang (0,0089) dan turun
+tajam pada kelompok tinggi (0,0049). Embedding turun konsisten dari 0,0066
+(rendah) menjadi 0,0031 (tinggi).
+
+\begin{table}[t]
+\centering
+\caption{NDCG@10 menurut kelompok keaktifan pengguna.}
+\label{tab:group}
+\begin{tabular}{lrrr}
+\hline
+Model & Rendah (1--4) & Sedang (5--9) & Tinggi ($\geq$10) \\
+\hline
+Popularity & 0,0111 & 0,0086 & 0,0070 \\
+ALS        & 0,0114 & 0,0121 & 0,0148 \\
+TF-IDF     & 0,0079 & 0,0089 & 0,0049 \\
+Embedding  & 0,0066 & 0,0050 & 0,0031 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig3_activity_groups.png}
+\caption{NDCG@10 menurut kelompok keaktifan pengguna.}
+\label{fig:group}
+\end{figure}
+
+\subsection{Uji Signifikansi}
+Paired bootstrap (1.000 resampling pengguna, seed 42, CI 95\%) atas selisih
+embedding (E4-B) dikurangi TF-IDF (E3-B) menunjukkan bahwa embedding
+\textbf{secara signifikan lebih rendah} secara keseluruhan: selisih NDCG@10
+$-0{,}0023$ (CI $-0{,}0033$ sampai $-0{,}0012$) dan Recall@10 $-0{,}0041$
+(CI $-0{,}0057$ sampai $-0{,}0022$). Menurut kelompok, selisih NDCG@10
+signifikan pada pengguna sedang ($-0{,}0039$; CI $-0{,}0062$ sampai $-0{,}0018$),
+tetapi CI mencakup nol pada pengguna rendah ($-0{,}0012$) dan tinggi ($-0{,}0018$);
+untuk Recall@10 selisihnya signifikan pada ketiga kelompok.
+
+\subsection{Jawaban terhadap Research Question}
+% === GANTI dengan teks RQ resmi kelompok ===
+\textbf{RQ1} (disimpulkan): apakah representasi semantik (\textit{sentence embedding})
+menghasilkan rekomendasi Top-N lebih baik daripada representasi leksikal
+(TF-IDF) pada Amazon Musical Instruments? Hasil validation \textbf{tidak
+mendukung} dugaan bahwa embedding lebih baik: embedding lebih rendah daripada
+TF-IDF pada seluruh konfigurasi, seluruh nilai K, dan seluruh metrik, dan selisih
+keseluruhannya signifikan secara statistik (bagian sebelumnya).
+
+\textbf{RQ2} (disimpulkan): apakah perbedaannya bergantung pada keaktifan
+pengguna? Embedding tertinggal pada ketiga kelompok, tetapi selisih NDCG@10
+paling jelas pada kelompok sedang; pada kelompok rendah dan tinggi, CI-nya
+mencakup nol sehingga selisihnya belum dapat disimpulkan untuk NDCG@10.
+
+\subsection{Temuan Tak Terduga}
+\begin{itemize}
+\item \textbf{Popularity mengungguli kedua model berbasis konten.} Pada data ini
+  sinyal konten saja belum cukup, dan ALS menjadi acuan terkuat.
+\item \textbf{Daftar TF-IDF dan embedding sangat berbeda}: Jaccard@10 rata-rata
+  hanya 0,151, 28,8\% pengguna tidak punya satu pun item yang sama, dan hanya
+  0,14\% yang menerima daftar identik. Jadi kekalahan embedding bukan karena
+  mengubah urutan daftar yang sama, melainkan karena memilih item berbeda.
+\item \textbf{Akurasi dan keragaman berkebalikan.} Coverage@10 TF-IDF (0,71)
+  dan embedding (0,62) jauh lebih luas daripada ALS (0,042) dan Popularity
+  (0,0008), tetapi akurasinya lebih rendah.
+\item \textbf{Hasil tuning kecil.} Tuning ALS dan TF-IDF hanya menaikkan
+  NDCG@10 kurang dari 0,0001 (0,2\% dan 0,5\%) dari konfigurasi awal, dan
+  konfigurasi awal embedding sudah yang terbaik.
+\end{itemize}
+
+\subsection{Keterbatasan}
+\begin{itemize}
+\item Nilai absolut seluruh model kecil (Recall@10 sekitar 1--2\%) karena ada
+  22.753 kandidat dan pengguna hanya punya sedikit item relevan pada validasi.
+\item Hanya satu model embedding (MiniLM) dan satu kolom teks
+  (\texttt{content\_text\_basic}) yang diuji; MPNet atau BLaIR belum dicoba.
+\item Profil pengguna dibentuk dengan rata-rata vektor item untuk TF-IDF dan
+  embedding; pembobotan lain belum dieksplorasi.
+\item Uji signifikansi baru untuk embedding terhadap TF-IDF. Selisih antar
+  konfigurasi ALS yang sangat kecil (mis.\ E2-07, E2-09, E2-11) belum diuji dan
+  kemungkinan tidak bermakna.
+\item Hanya satu seed, dan evaluasi pada set uji belum dilakukan (sengaja).
+\end{itemize}
+
+\subsection{Reproduksibilitas}
+Seluruh konfigurasi, hasil, dan skrip tersedia di repositori GitHub kelompok
+(\url{https://github.com/AndikaNadapdap/12S4054-G01-TrackE}). Perintah:
+\texttt{bash scripts/run\_cp3\_validation.sh <data>} (K=10),
+\texttt{bash scripts/run\_k\_sweep.sh <data>} (K=20/50), dan
+\texttt{python scripts/make\_figures.py} (tabel dan grafik).
