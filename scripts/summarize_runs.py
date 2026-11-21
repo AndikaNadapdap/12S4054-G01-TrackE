@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 RESULTS = Path(__file__).resolve().parent.parent / "results"
-ORDER = ["E1", "E2", "E3-A", "E3-B", "E3-C", "E4-A", "E4-B", "E4-C"]
+ORDER = ["E1", "E2", "E2-07", "E3-A", "E3-B", "E3-C", "E4-A", "E4-B", "E4-C"]
 
 
 def load_latest_full_runs():
@@ -47,16 +47,29 @@ def main():
     print("Track E - validation results, all evaluable users "
           f"(n = {', '.join(map(str, sorted(n_users)))}), K = 10")
     header = (f"{'Exp':<6}{'Model':<11}{'Recall@10':>10}{'NDCG@10':>9}"
-              f"{'NDCG low':>10}{'NDCG med':>10}{'NDCG high':>10}  {'Commit':<8}{'Date':<11}")
+              f"{'NDCG low':>11}{'NDCG med':>11}{'NDCG high':>11}  {'Commit':<8}{'Date':<11}")
     print(header)
     print("-" * len(header))
     for e in exps:
         r = latest[e]
         g = group_ndcg(r["run_id"])
         print(f"{e:<6}{r['model']:<11}{r['recall@10']:>10.4f}{r['ndcg@10']:>9.4f}"
-              f"{g.get('low', float('nan')):>10.4f}{g.get('medium', float('nan')):>10.4f}"
-              f"{g.get('high', float('nan')):>10.4f}  {(r.get('git_commit') or '-')[:7]:<8}"
+              f"{g.get('low', float('nan')):>11.4f}{g.get('medium', float('nan')):>11.4f}"
+              f"{g.get('high', float('nan')):>11.4f}  {(r.get('git_commit') or '-')[:7]:<8}"
               f"{r['timestamp'][:10]:<11}")
+
+    # Additional metrics (only logged by runs made after they were added to src/run.py).
+    extra = [e for e in exps if latest[e].get("hitrate@10") is not None]
+    if extra:
+        print("\nAdditional metrics (HitRate = share of users with >= 1 hit; "
+              "Coverage = share of 22,753 candidates shown to anyone)")
+        header = f"{'Exp':<6}{'Model':<11}{'HitRate@10':>11}{'MRR@10':>9}{'Coverage@10':>13}"
+        print(header)
+        print("-" * len(header))
+        for e in extra:
+            r = latest[e]
+            print(f"{e:<6}{r['model']:<11}{r['hitrate@10']:>11.4f}{r['mrr@10']:>9.4f}"
+                  f"{r['coverage@10']:>13.4f}")
 
 
 if __name__ == "__main__":

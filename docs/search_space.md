@@ -135,6 +135,10 @@ Ketentuan reproducibility eksperimen:
 
 * Jaccard@10 antara daftar Top-10 TF-IDF dan Sentence Embedding untuk user yang sama: menunjukkan apakah kedua representasi merekomendasikan item yang berbeda atau hanya mengubah urutan.
 * Catalog coverage: proporsi dari 22.753 kandidat yang muncul di minimal satu daftar Top-10; relevan karena daftar CBF cenderung sempit.
+* HitRate@10: proporsi user yang minimal satu item relevannya masuk Top-10.
+* MRR@10: rata-rata 1/posisi item relevan pertama di Top-10 (0 jika tidak ada).
+
+Metrik tambahan ini hanya untuk analisis dan tidak dipakai untuk memilih konfigurasi. HitRate@10, MRR@10 dan Coverage@10 dihitung oleh src/run.py; Jaccard@10 dihitung oleh scripts/jaccard_overlap.py dari file results/<run_id>_top10.csv.
 
 7. Kriteria Pemilihan Konfigurasi
 

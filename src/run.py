@@ -20,7 +20,7 @@ from src.eval_protocol import (
     get_evaluable_users,
     validate_recommendations,
 )
-from src.metrics import evaluate, summarize_metrics
+from src.metrics import catalog_coverage, evaluate, summarize_metrics
 
 from src.popularity import PopularityRecommender
 from src.mf_als import ALSRecommender
@@ -305,8 +305,16 @@ def run_experiment(config_path, subset_override=None):
             **{
                 "Recall@10": ("Recall@10", "mean"),
                 "NDCG@10": ("NDCG@10", "mean"),
+                "HitRate@10": ("HitRate@10", "mean"),
+                "MRR@10": ("MRR@10", "mean"),
             },
         )
+    )
+
+    overall["Coverage@10"] = catalog_coverage(
+        recommendations,
+        candidates,
+        k,
     )
 
     # 8. Calculate runtime.
@@ -324,6 +332,15 @@ def run_experiment(config_path, subset_override=None):
 
     per_user.to_csv(per_user_path)
     by_group.to_csv(group_path)
+
+    # Top-K lists, needed for Jaccard@10 between models (scripts/jaccard_overlap.py).
+    top_k_path = output_dir / f"{run_name}_top{k}.csv"
+    pd.DataFrame(
+        [(user, rank + 1, item)
+         for user in users
+         for rank, item in enumerate(recommendations[user])],
+        columns=["user_id", "rank", "item_id"],
+    ).to_csv(top_k_path, index=False)
 
     overall_result = {
         **overall,
@@ -363,6 +380,9 @@ def run_experiment(config_path, subset_override=None):
         "n_evaluable_users": len(users),
         "recall@10": overall.get("Recall@10"),
         "ndcg@10": overall.get("NDCG@10"),
+        "hitrate@10": overall.get("HitRate@10"),
+        "mrr@10": overall.get("MRR@10"),
+        "coverage@10": overall.get("Coverage@10"),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "runtime_seconds": round(runtime, 3),
         "seed": seed,
