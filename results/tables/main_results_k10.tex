@@ -1,0 +1,15 @@
+\begin{table}[t]
+\centering
+\caption{Validation results at K=10 on all 11,659 evaluable users (selected configuration per model).}
+\label{tab:main-k10}
+\begin{tabular}{lrrrrrr}
+\hline
+Model & Config & Recall@10 & NDCG@10 & HitRate@10 & MRR@10 & Coverage@10 \\
+\hline
+Popularity & E1 & 0.0135 & 0.0092 & 0.0310 & 0.0130 & 0.0008 \\
+ALS & E2-07 & 0.0200 & 0.0124 & 0.0396 & 0.0153 & 0.0421 \\
+TF-IDF & E3-B & 0.0127 & 0.0075 & 0.0214 & 0.0082 & 0.7122 \\
+Embedding & E4-B & 0.0087 & 0.0052 & 0.0149 & 0.0058 & 0.6221 \\
+\hline
+\end{tabular}
+\end{table}

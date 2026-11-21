@@ -33,3 +33,5 @@ results/*_subset100_*
 
 # Top-10 lists written by src/run.py (large; re-created by each run)
 results/*_top10.csv
+results/**/*_per_user.csv
+results/**/*_top[0-9]*.csv
