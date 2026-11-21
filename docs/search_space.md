@@ -36,7 +36,7 @@ Total terdapat 18 kombinasi konfigurasi ALS yang direncanakan.
 
 Seluruh konfigurasi ALS menggunakan interaksi positif pada training data sebagai implicit feedback. Interaksi dengan rating ≥ 4 diperlakukan sebagai positive preference.
 
-Pada tahap implementasi saat ini, konfigurasi ALS yang telah dijalankan sebagai baseline menggunakan factors 64, regularization 0.1, alpha 10, dan 15 iterasi. Dengan demikian, 18 kombinasi merupakan ruang pencarian yang direncanakan dan tidak menunjukkan bahwa seluruh kombinasi telah dijalankan.
+Ke-18 kombinasi tersedia sebagai file konfigurasi di configs/e2_grid/ (E2-01 sampai E2-18). Konfigurasi E2 (factors 64, regularization 0.1, alpha 10) adalah konfigurasi awal CP2.
 
 2.3 TF-IDF Content-Based Filtering
 
@@ -84,7 +84,7 @@ Konfigurasi E4 digunakan sebagai baseline sentence embedding dengan max sequence
 
 TF-IDF dan Sentence Embedding masing-masing menggunakan tiga konfigurasi untuk proses perbandingan.
 
-Seluruh konfigurasi dievaluasi menggunakan validation split dan jumlah pengguna evaluasi yang sama.
+Seluruh konfigurasi dievaluasi menggunakan validation split pada seluruh 11.659 evaluable users (subset: 0).
 
 Pemilihan konfigurasi terbaik dilakukan berdasarkan NDCG@10 tertinggi. Recall@10 digunakan sebagai tie-breaker apabila nilai NDCG@10 sama.
 
@@ -131,14 +131,23 @@ Ketentuan reproducibility eksperimen:
 * Setiap hasil eksperimen harus dapat ditelusuri ke konfigurasi YAML dan versi kode yang digunakan.
 * Perubahan working tree yang belum di-commit perlu diperhatikan ketika mencatat versi kode eksperimen.
 
-6. Kriteria Pemilihan Konfigurasi
+6. Metrik Tambahan Track E
+
+* Jaccard@10 antara daftar Top-10 TF-IDF dan Sentence Embedding untuk user yang sama: menunjukkan apakah kedua representasi merekomendasikan item yang berbeda atau hanya mengubah urutan.
+* Catalog coverage: proporsi dari 22.753 kandidat yang muncul di minimal satu daftar Top-10; relevan karena daftar CBF cenderung sempit.
+* HitRate@10: proporsi user yang minimal satu item relevannya masuk Top-10.
+* MRR@10: rata-rata 1/posisi item relevan pertama di Top-10 (0 jika tidak ada).
+
+Metrik tambahan ini hanya untuk analisis dan tidak dipakai untuk memilih konfigurasi. HitRate@10, MRR@10 dan Coverage@10 dihitung oleh src/run.py; Jaccard@10 dihitung oleh scripts/jaccard_overlap.py dari file results/<run_id>_top10.csv.
+
+7. Kriteria Pemilihan Konfigurasi
 
 Konfigurasi terbaik dipilih berdasarkan ketentuan berikut:
 
 1. NDCG@10 tertinggi pada validation split.
 2. Recall@10 menjadi tie-breaker apabila nilai NDCG@10 sama.
 3. Budget tuning TF-IDF dan Sentence Embedding dibuat setara, yaitu masing-masing tiga konfigurasi.
-4. Pemilihan konfigurasi terbaik dilakukan hanya menggunakan validation split.
+4. Pemilihan konfigurasi terbaik dilakukan hanya menggunakan validation split pada seluruh evaluable users, dan hanya dari run yang dijalankan dari kode yang sudah di-commit (git_dirty = false). Aturan ini diterapkan otomatis oleh scripts/select_best.py.
 5. Test split hanya digunakan untuk evaluasi akhir sesuai ketentuan evaluasi final.
 
 ⸻

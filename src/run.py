@@ -20,7 +20,7 @@ from src.eval_protocol import (
     get_evaluable_users,
     validate_recommendations,
 )
-from src.metrics import evaluate, summarize_metrics
+from src.metrics import catalog_coverage, evaluate, summarize_metrics
 
 from src.popularity import PopularityRecommender
 from src.mf_als import ALSRecommender
@@ -51,6 +51,26 @@ def get_git_commit():
             check=True,
         )
         return result.stdout.strip()
+
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def get_git_dirty():
+    """True if there are uncommitted changes to tracked code files.
+
+    Results are only traceable to `git_commit` when this is False, so every
+    reported run should be executed from committed code.
+    """
+
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no", "--", "src", "configs"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return bool(result.stdout.strip())
 
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None
@@ -285,8 +305,16 @@ def run_experiment(config_path, subset_override=None):
             **{
                 "Recall@10": ("Recall@10", "mean"),
                 "NDCG@10": ("NDCG@10", "mean"),
+                "HitRate@10": ("HitRate@10", "mean"),
+                "MRR@10": ("MRR@10", "mean"),
             },
         )
+    )
+
+    overall["Coverage@10"] = catalog_coverage(
+        recommendations,
+        candidates,
+        k,
     )
 
     # 8. Calculate runtime.
@@ -304,6 +332,15 @@ def run_experiment(config_path, subset_override=None):
 
     per_user.to_csv(per_user_path)
     by_group.to_csv(group_path)
+
+    # Top-K lists, needed for Jaccard@10 between models (scripts/jaccard_overlap.py).
+    top_k_path = output_dir / f"{run_name}_top{k}.csv"
+    pd.DataFrame(
+        [(user, rank + 1, item)
+         for user in users
+         for rank, item in enumerate(recommendations[user])],
+        columns=["user_id", "rank", "item_id"],
+    ).to_csv(top_k_path, index=False)
 
     overall_result = {
         **overall,
@@ -339,9 +376,13 @@ def run_experiment(config_path, subset_override=None):
         "model": model_name,
         "config_hash": config_hash,
         "git_commit": get_git_commit(),
+        "git_dirty": get_git_dirty(),
         "n_evaluable_users": len(users),
         "recall@10": overall.get("Recall@10"),
         "ndcg@10": overall.get("NDCG@10"),
+        "hitrate@10": overall.get("HitRate@10"),
+        "mrr@10": overall.get("MRR@10"),
+        "coverage@10": overall.get("Coverage@10"),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "runtime_seconds": round(runtime, 3),
         "seed": seed,
@@ -361,6 +402,10 @@ def run_experiment(config_path, subset_override=None):
 
     print("\nResults by activity group:")
     print(by_group)
+
+    if log_entry["git_dirty"]:
+        print("\nWARNING: src/ or configs/ has uncommitted changes; "
+              "commit first so this run is traceable to git_commit.")
 
     print(f"\nRuntime: {runtime:.2f} seconds")
     print(f"Saved log: {log_path}")

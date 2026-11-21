@@ -48,9 +48,47 @@ def ndcg_at_k(recommendations, relevant_items, k=10):
     return dcg / idcg if idcg > 0 else 0.0
 
 
+def hit_rate_at_k(recommendations, relevant_items, k=10):
+    """1 if at least one relevant item is in the Top-K, else 0."""
+
+    if k <= 0:
+        raise ValueError("k must be greater than zero.")
+
+    relevant = set(relevant_items)
+
+    return float(any(item in relevant for item in recommendations[:k]))
+
+
+def mrr_at_k(recommendations, relevant_items, k=10):
+    """Reciprocal rank of the first relevant item in the Top-K (0 if none)."""
+
+    if k <= 0:
+        raise ValueError("k must be greater than zero.")
+
+    relevant = set(relevant_items)
+
+    for rank, item in enumerate(recommendations[:k]):
+        if item in relevant:
+            return 1.0 / (rank + 1)
+
+    return 0.0
+
+
+def catalog_coverage(recommendations, candidates, k=10):
+    """Share of candidate items that appear in at least one user's Top-K."""
+
+    shown = {
+        item
+        for recs in recommendations.values()
+        for item in recs[:k]
+    }
+
+    return len(shown) / len(candidates)
+
+
 def evaluate(recommendations, relevant, k=10):
     """
-    Calculate per-user Recall@K and NDCG@K.
+    Calculate per-user Recall@K, NDCG@K, HitRate@K and MRR@K.
 
     Returns a pandas DataFrame indexed by user_id.
     """
@@ -71,6 +109,8 @@ def evaluate(recommendations, relevant, k=10):
             "user_id": user_id,
             f"Recall@{k}": recall_at_k(recs, relevant_items, k),
             f"NDCG@{k}": ndcg_at_k(recs, relevant_items, k),
+            f"HitRate@{k}": hit_rate_at_k(recs, relevant_items, k),
+            f"MRR@{k}": mrr_at_k(recs, relevant_items, k),
         })
 
     return pd.DataFrame(rows).set_index("user_id")

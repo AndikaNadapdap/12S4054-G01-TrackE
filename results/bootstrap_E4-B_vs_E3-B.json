@@ -1,0 +1,63 @@
+{
+  "comparison": "E4-B embedding minus E3-B tfidf",
+  "n_resamples": 1000,
+  "seed": 42,
+  "results": {
+    "all|NDCG@10": {
+      "mean_difference": -0.00231,
+      "ci_lower": -0.0033,
+      "ci_upper": -0.00116,
+      "n_users": 11659,
+      "significant": true
+    },
+    "all|Recall@10": {
+      "mean_difference": -0.00406,
+      "ci_lower": -0.00571,
+      "ci_upper": -0.00222,
+      "n_users": 11659,
+      "significant": true
+    },
+    "low (1-4)|NDCG@10": {
+      "mean_difference": -0.00122,
+      "ci_lower": -0.00277,
+      "ci_upper": 0.00024,
+      "n_users": 4772,
+      "significant": false
+    },
+    "low (1-4)|Recall@10": {
+      "mean_difference": -0.00285,
+      "ci_lower": -0.00548,
+      "ci_upper": -0.00059,
+      "n_users": 4772,
+      "significant": true
+    },
+    "medium (5-9)|NDCG@10": {
+      "mean_difference": -0.00394,
+      "ci_lower": -0.00616,
+      "ci_upper": -0.0018,
+      "n_users": 4142,
+      "significant": true
+    },
+    "medium (5-9)|Recall@10": {
+      "mean_difference": -0.00579,
+      "ci_lower": -0.00908,
+      "ci_upper": -0.0025,
+      "n_users": 4142,
+      "significant": true
+    },
+    "high (>=10)|NDCG@10": {
+      "mean_difference": -0.00175,
+      "ci_lower": -0.00385,
+      "ci_upper": 0.00014,
+      "n_users": 2745,
+      "significant": false
+    },
+    "high (>=10)|Recall@10": {
+      "mean_difference": -0.00356,
+      "ci_lower": -0.00678,
+      "ci_upper": -0.00041,
+      "n_users": 2745,
+      "significant": true
+    }
+  }
+}

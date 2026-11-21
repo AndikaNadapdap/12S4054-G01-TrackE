@@ -1,9 +1,12 @@
 {
   "Recall@10": 0.008277434436725668,
   "NDCG@10": 0.004952988008765539,
+  "HitRate@10": 0.014409469079680933,
+  "MRR@10": 0.0054587232153918835,
+  "Coverage@10": 0.6062936755592669,
   "experiment_id": "E4-C",
   "model": "embedding",
   "n_users": 11659,
   "n_candidates": 22753,
-  "runtime_seconds": 218.5
+  "runtime_seconds": 704.957
 }

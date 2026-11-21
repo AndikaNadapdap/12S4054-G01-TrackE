@@ -71,3 +71,24 @@ def test_invalid_k():
 
     with pytest.raises(ValueError):
         ndcg_at_k(["A"], {"A"}, 0)
+
+def test_hit_rate_and_mrr():
+    from src.metrics import hit_rate_at_k, mrr_at_k
+
+    recs = ["A", "B", "C", "D"]
+
+    assert hit_rate_at_k(recs, {"C"}, k=4) == 1.0
+    assert hit_rate_at_k(recs, {"Z"}, k=4) == 0.0
+    assert hit_rate_at_k(recs, {"D"}, k=3) == 0.0      # outside Top-3
+
+    assert mrr_at_k(recs, {"C", "D"}, k=4) == 1.0 / 3  # first hit at rank 3
+    assert mrr_at_k(recs, {"Z"}, k=4) == 0.0
+
+
+def test_catalog_coverage():
+    from src.metrics import catalog_coverage
+
+    recs = {1: ["A", "B"], 2: ["B", "C"]}
+
+    assert catalog_coverage(recs, ["A", "B", "C", "D"], k=2) == 0.75
+    assert catalog_coverage(recs, ["A", "B", "C", "D"], k=1) == 0.5

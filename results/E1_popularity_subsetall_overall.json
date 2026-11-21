@@ -1,9 +1,12 @@
 {
-  "Recall@10": 0.013498503732927795,
+  "Recall@10": 0.013498503732927799,
   "NDCG@10": 0.009222040875545052,
+  "HitRate@10": 0.03104897504074106,
+  "MRR@10": 0.012987718459885883,
+  "Coverage@10": 0.000791104469740254,
   "experiment_id": "E1",
   "model": "popularity",
   "n_users": 11659,
   "n_candidates": 22753,
-  "runtime_seconds": 1.305
+  "runtime_seconds": 2.953
 }

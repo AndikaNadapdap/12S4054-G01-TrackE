@@ -30,3 +30,6 @@ Thumbs.db
 # Per-user evaluation outputs
 results/*_per_user.csv
 results/*_subset100_*
+
+# Top-10 lists written by src/run.py (large; re-created by each run)
+results/*_top10.csv
