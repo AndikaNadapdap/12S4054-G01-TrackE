@@ -1,0 +1,12 @@
+experiment:
+  id: E1-K50
+  name: popularity
+  model: popularity
+evaluation:
+  k: 50
+  subset: 0
+  seed: 42
+data:
+  directory: .
+output:
+  directory: results/k_sweep

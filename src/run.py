@@ -301,17 +301,15 @@ def run_experiment(config_path, subset_override=None):
             observed=False,
         )
         .agg(
-            n_users=("Recall@10", "count"),
+            n_users=(f"Recall@{k}", "count"),
             **{
-                "Recall@10": ("Recall@10", "mean"),
-                "NDCG@10": ("NDCG@10", "mean"),
-                "HitRate@10": ("HitRate@10", "mean"),
-                "MRR@10": ("MRR@10", "mean"),
+                f"{name}@{k}": (f"{name}@{k}", "mean")
+                for name in ("Recall", "NDCG", "HitRate", "MRR")
             },
         )
     )
 
-    overall["Coverage@10"] = catalog_coverage(
+    overall[f"Coverage@{k}"] = catalog_coverage(
         recommendations,
         candidates,
         k,
@@ -378,11 +376,11 @@ def run_experiment(config_path, subset_override=None):
         "git_commit": get_git_commit(),
         "git_dirty": get_git_dirty(),
         "n_evaluable_users": len(users),
-        "recall@10": overall.get("Recall@10"),
-        "ndcg@10": overall.get("NDCG@10"),
-        "hitrate@10": overall.get("HitRate@10"),
-        "mrr@10": overall.get("MRR@10"),
-        "coverage@10": overall.get("Coverage@10"),
+        f"recall@{k}": overall.get(f"Recall@{k}"),
+        f"ndcg@{k}": overall.get(f"NDCG@{k}"),
+        f"hitrate@{k}": overall.get(f"HitRate@{k}"),
+        f"mrr@{k}": overall.get(f"MRR@{k}"),
+        f"coverage@{k}": overall.get(f"Coverage@{k}"),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "runtime_seconds": round(runtime, 3),
         "seed": seed,

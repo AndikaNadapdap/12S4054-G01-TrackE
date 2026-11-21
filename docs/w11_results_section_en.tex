@@ -1,0 +1,249 @@
+% ===========================================================================
+% W11 Results section for the Overleaf paper (acmart, English).
+% Paste after the Method section. Upload results/figures/*.png to Overleaf as figures/.
+% All numbers are generated from results/ (runs.jsonl, bootstrap_pairs.json, tables/*.csv).
+%
+% CHECK BEFORE SUBMITTING
+%  1. Section 2.3 of the Method says the TF-IDF vocabulary has 26,547 terms. The selected
+%     configuration (E3-B) caps it at 20,000 features; state this in Method or Results.
+%  2. Section 2.2 gives the *initial* ALS configuration (64 factors, lambda=0.1); the tuned
+%     configuration (E2-07, lambda=0.01) is reported here.
+%  3. Section 2.4 does not yet name the encoder (all-MiniLM-L6-v2, max length 256).
+%  4. The abstract is still empty.
+% ===========================================================================
+
+\section{Experimental Setup}
+\label{sec:setup}
+All results are computed on the validation split of the official temporal warm-start
+protocol: models are fitted on the training interactions only and ranked over the
+22{,}753 warm candidate items for each of the 11{,}659 evaluable validation users, with
+each user's training items removed. An item is relevant if the user rated it $\geq 4$ in the
+warm validation data. The test set is not used. We report NDCG@10 (the primary metric and the
+basis of model selection) and Recall@10 (tie-breaker), plus HitRate@10, MRR@10 and
+Coverage@10 (the share of candidates that appear in at least one Top-10 list). Users are
+grouped by the number of training interactions into low (1--4, $n=4{,}772$), medium (5--9,
+$n=4{,}142$) and high ($\geq 10$, $n=2{,}745$) activity. The seed is 42.
+
+Hyperparameters were tuned on validation only, following the search space fixed beforehand:
+18 ALS configurations (factors $\{32,64,128\}$, $\lambda\in\{0.01,0.1,1\}$,
+$\alpha\in\{10,40\}$), three TF-IDF configurations (5{,}000 or 20{,}000 features, with or
+without bigrams) and three embedding configurations (maximum input length 128, 256 or 512 tokens),
+so that the tuning budget of TF-IDF and the embedding model is equal. The configuration with the
+highest NDCG@10 over all evaluable users is selected, with Recall@10 as tie-breaker. The
+selected configurations are E2-07 (64 factors, $\lambda=0.01$, $\alpha=10$), E3-B (unigrams,
+20{,}000 features) and E4-B (\texttt{all-MiniLM-L6-v2}, length 256). Significance is assessed
+with a paired bootstrap over users (1{,}000 resamples, seed 42, 95\% CI).
+
+\section{Results}
+\label{sec:results}
+
+\subsection{Comparison with the baselines}
+Table~\ref{tab:main} and Figure~\ref{fig:models} compare the selected configurations at $K=10$.
+ALS is the strongest model, followed by Popularity, TF-IDF and the embedding model. The order is
+the same for NDCG, Recall, HitRate and MRR, and for $K=10, 20, 50$ (Tables~\ref{tab:k} and~\ref{tab:track},
+Figure~\ref{fig:k}). ALS improves NDCG@10 over Popularity by 35\% and Recall@10 by 48\%;
+TF-IDF is 18\% (NDCG) and 6\% (Recall) below Popularity, and the embedding model is a further
+31\% (NDCG) and 32\% (Recall) below TF-IDF. All models are 20--46 times better than random
+ranking (Recall@10 $\approx 10/22{,}753$).
+
+\begin{table}[t]
+\caption{Validation results at $K=10$ on all 11{,}659 evaluable users (selected configurations).}
+\label{tab:main}
+\small
+\begin{tabular}{llccccc}
+\toprule
+Model & ID & Recall & NDCG & HitRate & MRR & Coverage \\
+\midrule
+Popularity & E1 & 0.0135 & 0.0092 & 0.0310 & 0.0130 & 0.0008 \\
+ALS & E2-07 & 0.0200 & 0.0124 & 0.0396 & 0.0153 & 0.0421 \\
+TF-IDF & E3-B & 0.0127 & 0.0075 & 0.0214 & 0.0082 & 0.7122 \\
+Embedding & E4-B & 0.0087 & 0.0052 & 0.0149 & 0.0058 & 0.6221 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig1_model_comparison.png}
+\caption{NDCG@10 and Recall@10 of the selected configurations on the validation split.}
+\Description{Bar charts of NDCG@10 and Recall@10 for Popularity, ALS, TF-IDF and the embedding model.}
+\label{fig:models}
+\end{figure}
+
+\begin{table*}[t]
+\caption{Main results on all 11{,}659 validation users for $K\in\{10,20,50\}$ (N = NDCG, R = Recall, P = Precision; Precision@K is derived from per-user Recall@K and the number of relevant items).}
+\label{tab:k}
+\small
+\begin{tabular}{lccccccccc}
+\toprule
+Model & N@10 & N@20 & N@50 & R@10 & R@20 & R@50 & P@10 & P@20 & P@50 \\
+\midrule
+Popularity & 0.0092 & 0.0115 & 0.0162 & 0.0135 & 0.0215 & 0.0420 & 0.0032 & 0.0024 & 0.0018 \\
+ALS & 0.0124 & 0.0154 & 0.0206 & 0.0200 & 0.0299 & 0.0524 & 0.0041 & 0.0031 & 0.0022 \\
+TF-IDF & 0.0075 & 0.0095 & 0.0131 & 0.0127 & 0.0195 & 0.0348 & 0.0022 & 0.0018 & 0.0013 \\
+Embedding & 0.0052 & 0.0067 & 0.0093 & 0.0087 & 0.0137 & 0.0252 & 0.0016 & 0.0013 & 0.0009 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]
+\caption{Embedding model (track) versus each baseline: absolute difference and relative change in NDCG@K and Recall@K.}
+\label{tab:track}
+\small
+\begin{tabular}{lcll}
+\toprule
+Comparison & $K$ & $\Delta$NDCG@K & $\Delta$Recall@K \\
+\midrule
+Embedding $-$ Popularity & 10 & $-$0.0040 ($-$43.3\%) & $-$0.0048 ($-$35.7\%) \\
+Embedding $-$ Popularity & 20 & $-$0.0048 ($-$41.6\%) & $-$0.0078 ($-$36.4\%) \\
+Embedding $-$ Popularity & 50 & $-$0.0069 ($-$42.7\%) & $-$0.0168 ($-$40.0\%) \\
+Embedding $-$ ALS & 10 & $-$0.0072 ($-$58.0\%) & $-$0.0113 ($-$56.6\%) \\
+Embedding $-$ ALS & 20 & $-$0.0087 ($-$56.4\%) & $-$0.0162 ($-$54.3\%) \\
+Embedding $-$ ALS & 50 & $-$0.0113 ($-$54.9\%) & $-$0.0272 ($-$51.9\%) \\
+Embedding $-$ TF-IDF & 10 & $-$0.0023 ($-$30.7\%) & $-$0.0041 ($-$31.9\%) \\
+Embedding $-$ TF-IDF & 20 & $-$0.0028 ($-$29.4\%) & $-$0.0058 ($-$29.7\%) \\
+Embedding $-$ TF-IDF & 50 & $-$0.0038 ($-$28.7\%) & $-$0.0096 ($-$27.6\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig2_effect_of_k.png}
+\caption{NDCG@K and Recall@K for $K\in\{10,20,50\}$.}
+\Description{Line charts of NDCG@K and Recall@K for the four models; the model order is identical at every K.}
+\label{fig:k}
+\end{figure}
+
+\subsection{Hyperparameter search}
+Tuning changed the results very little (Figures~\ref{fig:grid} and~\ref{fig:lexsem}). The 18 ALS
+configurations span NDCG@10 0.0116--0.0124; the selected E2-07 is only 0.2\% better than the initial
+configuration, and E2-09 and E2-11 are practically tied with it (all 0.0124). Its regularization
+$\lambda=0.01$ is the smallest value tried, so smaller values remain untested. Tuning improved
+TF-IDF by 0.5\% (E3-B versus the initial E3) and left the embedding configuration unchanged (the
+initial E4 equals E4-B). Every embedding configuration (NDCG@10 0.0047--0.0052) is below every TF-IDF
+configuration (0.0071--0.0075), so the conclusion for RQ1 does not depend on the choice of
+hyperparameters within this search space. The input length is not monotone: 256 tokens is best,
+followed by 512 (0.0050) and 128 (0.0047).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig4_als_grid.png}
+\caption{NDCG@10 of the 18 ALS configurations on the validation split.}
+\Description{Heat map of NDCG@10 over factors and regularization/alpha combinations; values range from 0.0116 to 0.0124.}
+\label{fig:grid}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\columnwidth]{figures/fig5_lexical_vs_semantic.png}
+\caption{NDCG@10 of all TF-IDF (E3) and embedding (E4) configurations.}
+\Description{Bar chart showing that all three embedding configurations score below all three TF-IDF configurations.}
+\label{fig:lexsem}
+\end{figure}
+
+\subsection{RQ1: embedding versus TF-IDF}
+Under the same item text, profile rule and candidate set, the sentence-embedding recommender does
+\emph{not} achieve higher top-10 ranking quality than TF-IDF. The embedding model is lower on
+NDCG@10 (0.0052 versus 0.0075) and Recall@10 (0.0087 versus 0.0127), at every $K$, and for
+every configuration tried. Table~\ref{tab:boot} shows that the difference is statistically
+significant: Embedding $-$ TF-IDF is $-0.0023$ NDCG@10 (95\% CI $[-0.0033, -0.0011]$) and $-0.0041$
+Recall@10. The same table shows that ALS is significantly better than every other model and that the
+embedding model is significantly below Popularity. TF-IDF is significantly below Popularity on NDCG@10
+(upper confidence limit $-0.0001$) but not on Recall@10, where the interval includes zero.
+
+\begin{table}[t]
+\caption{Paired bootstrap of the difference in the mean metric at $K=10$ (all users; 95\% CI in brackets; $^{\mathrm{ns}}$ = interval includes zero).}
+\label{tab:boot}
+\small
+\begin{tabular}{lcc}
+\toprule
+Comparison (A $-$ B) & $\Delta$NDCG@10 & $\Delta$Recall@10 \\
+\midrule
+ALS $-$ Popularity & +0.0032 [+0.0017, +0.0049] & +0.0065 [+0.0039, +0.0093] \\
+ALS $-$ TF-IDF & +0.0049 [+0.0032, +0.0066] & +0.0073 [+0.0045, +0.0101] \\
+ALS $-$ Embedding & +0.0072 [+0.0057, +0.0088] & +0.0113 [+0.0087, +0.0139] \\
+TF-IDF $-$ Popularity & $-$0.0017 [$-$0.0034, $-$0.0001] & $-$0.0007 [$-$0.0033, +0.0018]$^{\mathrm{ns}}$ \\
+Embedding $-$ Popularity & $-$0.0040 [$-$0.0055, $-$0.0025] & $-$0.0048 [$-$0.0070, $-$0.0025] \\
+Embedding $-$ TF-IDF & $-$0.0023 [$-$0.0033, $-$0.0011] & $-$0.0041 [$-$0.0057, $-$0.0022] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{RQ2: the gap across user activity}
+Table~\ref{tab:group} and Figure~\ref{fig:group} break NDCG@10 down by training activity. The gap
+between the semantic and lexical representation is largest for medium-activity users
+($0.0039$), and smaller for low ($0.0012$) and high ($0.0017$) activity users. The bootstrap
+(Table~\ref{tab:groupboot}) shows that the NDCG@10 gap is significant only for medium-activity
+users; for low and high activity the interval includes zero, although the Recall@10 gap is
+significant in all three groups. Both content-based models weaken for active users (TF-IDF
+0.0089 $\to$ 0.0049 from medium to high; embedding 0.0066 $\to$ 0.0031 from low to high), whereas ALS
+improves (0.0114 $\to$ 0.0148). A possible explanation is that the mean of many diverse item
+vectors yields an over-general profile; we did not test this. For low-activity users ALS and
+Popularity are indistinguishable (difference $+0.0003$, CI includes zero).
+
+\begin{table}[t]
+\caption{NDCG@10 by user activity group (low 1--4, medium 5--9, high $\geq 10$ training interactions).}
+\label{tab:group}
+\small
+\begin{tabular}{lccc}
+\toprule
+Model & Low & Medium & High \\
+\midrule
+Popularity & 0.0111 & 0.0086 & 0.0070 \\
+ALS & 0.0114 & 0.0121 & 0.0148 \\
+TF-IDF & 0.0079 & 0.0089 & 0.0049 \\
+Embedding & 0.0066 & 0.0050 & 0.0031 \\
+TF-IDF $-$ Embedding & 0.0012 & 0.0039 & 0.0017 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig3_activity_groups.png}
+\caption{NDCG@10 by user activity group.}
+\Description{Grouped bar chart of NDCG@10 for the four models in the low, medium and high activity groups.}
+\label{fig:group}
+\end{figure}
+
+\begin{table}[t]
+\caption{Paired bootstrap of the NDCG@10 difference by activity group (95\% CI; $^{\mathrm{ns}}$ = interval includes zero).}
+\label{tab:groupboot}
+\small
+\begin{tabular}{llll}
+\toprule
+Comparison & Low & Medium & High \\
+\midrule
+Embedding $-$ TF-IDF & $-$0.0012 [$-$0.0028, +0.0002]$^{\mathrm{ns}}$ & $-$0.0039 [$-$0.0061, $-$0.0018] & $-$0.0018 [$-$0.0039, +0.0001]$^{\mathrm{ns}}$ \\
+ALS $-$ Popularity & +0.0003 [$-$0.0022, +0.0026]$^{\mathrm{ns}}$ & +0.0036 [+0.0007, +0.0063] & +0.0078 [+0.0049, +0.0111] \\
+TF-IDF $-$ Popularity & $-$0.0032 [$-$0.0059, $-$0.0005] & +0.0003 [$-$0.0025, +0.0034]$^{\mathrm{ns}}$ & $-$0.0021 [$-$0.0046, +0.0004]$^{\mathrm{ns}}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Further observations}
+The two content-based models recommend very different items: the mean Jaccard@10 between the
+TF-IDF and embedding lists is 0.151, 28.8\% of users share no
+item, and only 0.14\% receive identical lists. The embedding model therefore does not
+merely re-order the TF-IDF list; it selects other items that are less often correct. Accuracy and diversity
+move in opposite directions: TF-IDF and the embedding model cover 71\% and 62\% of the catalogue,
+against 4\% for ALS and 0.08\% for Popularity. Absolute values are small (Recall@10 of 1--2\%)
+because each user has about two relevant items (54.5\% have exactly one) among 22{,}753
+candidates, the data are sparse (density 0.0345\%) and the median user has five training interactions.
+
+\section{Limitations}
+\label{sec:limitations}
+Results use one seed and one temporal split; variation across seeds is not measured. Only one encoder
+(MiniLM) and one text field are compared, and user profiles are plain means of item vectors.
+Significance is tested for the pairs in Table~\ref{tab:boot} and for the groups in
+Table~\ref{tab:groupboot} without correction for multiple comparisons. Differences among the ALS
+configurations are very small and were not tested. The test set has not been used; the final evaluation
+of the selected configurations on it is future work.
+
+\section{Reproducibility}
+Code, configurations, results and figures are in the project repository
+(\url{https://github.com/AndikaNadapdap/12S4054-G01-TrackE}). Every run records its configuration hash,
+git commit and a clean-tree flag in \texttt{results/runs.jsonl}. Results are produced with
+\texttt{scripts/run\_cp3\_validation.sh} ($K=10$), \texttt{scripts/run\_k\_sweep.sh} ($K=20,50$),
+\texttt{scripts/run\_bootstrap.py} and \texttt{scripts/make\_figures.py}.
