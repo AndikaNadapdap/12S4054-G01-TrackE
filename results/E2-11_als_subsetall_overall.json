@@ -1,0 +1,9 @@
+{
+  "Recall@10": 0.01998755710694321,
+  "NDCG@10": 0.012412822666159009,
+  "experiment_id": "E2-11",
+  "model": "als",
+  "n_users": 11659,
+  "n_candidates": 22753,
+  "runtime_seconds": 68.598
+}
